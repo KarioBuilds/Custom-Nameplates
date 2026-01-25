@@ -14,6 +14,8 @@ repositories {
     maven("https://maven.enginehub.org/repo/") // worldguard worldedit
     maven("https://repo.alessiodp.com/releases/") // parties
     maven("https://maven.devs.beer/") // ia
+    maven("https://repo.pinodev.it/releases/") // zelchat
+    maven("https://repo.hibiscusmc.com/releases") // hmccosmetics
 }
 
 dependencies {
@@ -34,10 +36,15 @@ dependencies {
     compileOnly(files("libs/Typewriter.jar"))
     compileOnly("de.hexaoxi:carbonchat-api:3.0.0-beta.36")
     compileOnly("net.william278.huskchat:huskchat-bukkit:3.0.4")
-    compileOnly("net.essentialsx:EssentialsX:2.20.1")
-    compileOnly("net.essentialsx:EssentialsXChat:2.20.1")
+    compileOnly("net.essentialsx:EssentialsX:2.20.1") {
+        exclude(module = "spigot-api")
+    }
+    compileOnly("net.essentialsx:EssentialsXChat:2.20.1") {
+        exclude(module = "spigot-api")
+    }
     compileOnly("com.alessiodp.parties:parties-api:3.2.16")
     compileOnly("com.alessiodp.parties:parties-bukkit:3.2.16")
+    compileOnly("it.pino.zelchat:zelchat-api:2.0.0-pre-13")
 //    compileOnly("com.github.Brikster:Chatty:v2.19.14")
     compileOnly(files("libs/Chatty-3.0.0-SNAPSHOT.jar"))
     // Emoji
@@ -54,6 +61,8 @@ dependencies {
     // Cosmetics
     compileOnly("com.github.FrancoBM12:API-MagicCosmetics:2.2.9")
     compileOnly("com.github.sculmix:API-ECosmetics:1.0.1")
+    compileOnly("com.hibiscusmc:HMCCosmetics:2.8.3")
+    compileOnly("me.lojosho:HibiscusCommons:0.8.3")
 }
 
 java {

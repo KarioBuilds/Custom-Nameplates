@@ -8,11 +8,13 @@ softdepend:
   - PlaceholderAPI
   - MagicCosmetics
   - ECosmetics
+  - HMCCosmetics
   - ItemsAdder
   - Oraxen
   - TrChat
   - CarbonChat
   - HuskChat
+  - ZelChat
   - AdvancedChat
   - VentureChat
   - EssentialsChat
