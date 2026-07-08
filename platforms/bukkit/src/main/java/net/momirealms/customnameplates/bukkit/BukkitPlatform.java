@@ -32,6 +32,7 @@ import net.momirealms.customnameplates.api.network.Tracker;
 import net.momirealms.customnameplates.api.placeholder.DummyPlaceholder;
 import net.momirealms.customnameplates.api.placeholder.Placeholder;
 import net.momirealms.customnameplates.api.util.Alignment;
+import net.momirealms.customnameplates.api.util.Billboard;
 import net.momirealms.customnameplates.api.util.Vector3;
 import net.momirealms.customnameplates.backend.feature.actionbar.ActionBarManagerImpl;
 import net.momirealms.customnameplates.bukkit.util.BiomeUtils;
@@ -39,6 +40,9 @@ import net.momirealms.customnameplates.bukkit.util.EntityData;
 import net.momirealms.customnameplates.bukkit.util.Reflections;
 import net.momirealms.customnameplates.common.util.TriConsumer;
 import net.momirealms.customnameplates.common.util.UUIDUtils;
+import net.momirealms.sparrow.reflection.clazz.SparrowClass;
+import net.momirealms.sparrow.reflection.field.SField;
+import net.momirealms.sparrow.reflection.field.matcher.FieldMatcher;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -160,6 +164,7 @@ public class BukkitPlatform implements Platform {
             if (!ConfigManager.actionbarModule()) return;
             if (!ConfigManager.catchOtherActionBar()) return;
             if (!player.shouldCNTakeOverActionBar()) return;
+            if (player.player() == null) return;
             try {
             boolean actionBar = (boolean) Reflections.field$ClientboundSystemChatPacket$overlay.get(packet);
                 if (actionBar) {
@@ -416,6 +421,7 @@ public class BukkitPlatform implements Platform {
         }, "ClientboundSetEntityDataPacket", "PacketPlayOutEntityMetadata");
 
         // not a perfect solution but would work in most cases
+        SField visibilityField = VersionHelper.isVersionNewerThan26_2() ? SparrowClass.of(Reflections.clazz$ClientboundSetPlayerTeamPacket$Parameters).getDeclaredSparrowField(FieldMatcher.named("nameTagVisibility")).mh() : null;
         registerPacketConsumer((player, event, packet) -> {
             if (!ConfigManager.nametagModule()) return;
             if (!ConfigManager.hideTeamNames()) return;
@@ -449,7 +455,11 @@ public class BukkitPlatform implements Platform {
                         Optional<Object> optionalParameters = (Optional<Object>) Reflections.field$ClientboundSetPlayerTeamPacket$parameters.get(packet);
                         if (optionalParameters.isPresent()) {
                             Object parameters = optionalParameters.get();
-                            Reflections.field$ClientboundSetPlayerTeamPacket$Parameters$nametagVisibility.set(parameters, VersionHelper.isVersionNewerThan1_21_5() ? Reflections.instance$Team$Visibility$NEVER : "never");
+                            if (VersionHelper.isVersionNewerThan26_2()) {
+                                visibilityField.set(parameters, Reflections.instance$Team$Visibility$NEVER);
+                            } else {
+                                Reflections.field$ClientboundSetPlayerTeamPacket$Parameters$nametagVisibility.set(parameters, VersionHelper.isVersionNewerThan1_21_5() ? Reflections.instance$Team$Visibility$NEVER : "never");
+                            }
                         }
                     }
                     // remove
@@ -479,7 +489,11 @@ public class BukkitPlatform implements Platform {
                         Optional<Object> optionalParameters = (Optional<Object>) Reflections.field$ClientboundSetPlayerTeamPacket$parameters.get(packet);
                         if (optionalParameters.isPresent()) {
                             Object parameters = optionalParameters.get();
-                            Reflections.field$ClientboundSetPlayerTeamPacket$Parameters$nametagVisibility.set(parameters, VersionHelper.isVersionNewerThan1_21_5() ? Reflections.instance$Team$Visibility$NEVER : "never");
+                            if (VersionHelper.isVersionNewerThan26_2()) {
+                                visibilityField.set(parameters, Reflections.instance$Team$Visibility$NEVER);
+                            } else {
+                                Reflections.field$ClientboundSetPlayerTeamPacket$Parameters$nametagVisibility.set(parameters, VersionHelper.isVersionNewerThan1_21_5() ? Reflections.instance$Team$Visibility$NEVER : "never");
+                            }
                         }
                     }
                     // add members
@@ -611,9 +625,8 @@ public class BukkitPlatform implements Platform {
             int interpolationDelay, int transformationInterpolationDuration, int positionRotationInterpolationDuration,
             Object component, int backgroundColor, byte opacity,
             boolean hasShadow, boolean isSeeThrough, boolean useDefaultBackgroundColor, Alignment alignment,
-            float viewRange, float shadowRadius, float shadowStrength,
-            Vector3 scale, Vector3 translation, int lineWidth, boolean isCrouching
-    ) {
+            Billboard billboard, float viewRange, float shadowRadius, float shadowStrength,
+            Vector3 scale, Vector3 translation, int lineWidth, boolean isCrouching) {
         try {
             Object addEntityPacket = Reflections.constructor$ClientboundAddEntityPacket.newInstance(
                     entityID, uuid, position.x(), position.y(), position.z(), pitch, yaw,
@@ -629,7 +642,7 @@ public class BukkitPlatform implements Platform {
             } else {
                 EntityData.InterpolationDuration.addEntityDataIfNotDefaultValue(transformationInterpolationDuration, values);
             }
-            EntityData.BillboardConstraints.addEntityDataIfNotDefaultValue((byte) 3,                     values);
+            EntityData.BillboardConstraints.addEntityDataIfNotDefaultValue(billboard.id(),               values);
             EntityData.BackgroundColor.addEntityDataIfNotDefaultValue(     backgroundColor,              values);
             EntityData.Text.addEntityDataIfNotDefaultValue(                component,                    values);
             EntityData.TextOpacity.addEntityDataIfNotDefaultValue(         isCrouching ? 64 : opacity,   values);

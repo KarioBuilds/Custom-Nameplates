@@ -13,6 +13,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/") // paper
     maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // spigot
+    maven("https://repo.momirealms.net/releases/")
 }
 
 dependencies {
@@ -31,11 +32,13 @@ dependencies {
     // Adventure
     implementation("net.kyori:adventure-api:${rootProject.properties["adventure_bundle_version"]}")
     implementation("net.kyori:adventure-text-minimessage:${rootProject.properties["adventure_bundle_version"]}")
-    implementation("net.kyori:adventure-platform-bukkit:${rootProject.properties["adventure_platform_version"]}")
     implementation("net.kyori:adventure-text-serializer-gson:${rootProject.properties["adventure_bundle_version"]}") {
         exclude("com.google.code.gson", "gson")
     }
     implementation("net.kyori:adventure-text-serializer-json-legacy-impl:${rootProject.properties["adventure_bundle_version"]}")
+    implementation("net.kyori:adventure-text-serializer-legacy:${project.properties["adventure_bundle_version"]}")
+
+    implementation("net.momirealms:sparrow-reflection:0.33")
 
     // BStats
     compileOnly("org.bstats:bstats-bukkit:${rootProject.properties["bstats_version"]}")
@@ -67,6 +70,7 @@ tasks {
         relocate("com.github.benmanes.caffeine", "net.momirealms.customnameplates.libraries.caffeine")
         relocate("net.objecthunter.exp4j", "net.momirealms.customnameplates.libraries.exp4j")
         relocate("redis.clients.jedis", "net.momirealms.customnameplates.libraries.jedis")
+        relocate("net.momirealms.sparrow.reflection", "net.momirealms.customnameplates.libraries.reflection")
     }
 }
 
