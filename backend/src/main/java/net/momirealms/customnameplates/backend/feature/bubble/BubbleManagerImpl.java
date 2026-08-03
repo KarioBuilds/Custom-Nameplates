@@ -61,6 +61,8 @@ public class BubbleManagerImpl implements BubbleManager, ChatListener {
     private int stayDuration;
     private int appearDuration;
     private int disappearDuration;
+    private double durationPerCharacter;
+    private int maxStayDuration;
     private float viewRange;
     private Set<String> blacklistChannels;
     private ChannelMode channelMode;
@@ -163,6 +165,16 @@ public class BubbleManagerImpl implements BubbleManager, ChatListener {
     }
 
     @Override
+    public double durationPerCharacter() {
+        return durationPerCharacter;
+    }
+
+    @Override
+    public int maxStayDuration() {
+        return maxStayDuration;
+    }
+
+    @Override
     public int appearDuration() {
         return appearDuration;
     }
@@ -219,7 +231,9 @@ public class BubbleManagerImpl implements BubbleManager, ChatListener {
         viewBubbleRequirements = plugin.getRequirementManager().parseRequirements(document.getSection("viewer-requirements"));
         defaultBubbleId = document.getString("default-bubble", "chat");
         yOffset = document.getDouble("y-offset", 0.2);
-        stayDuration = document.getInt("stay-duration", 160);
+        stayDuration = document.getInt("stay-duration", 100);
+        durationPerCharacter = document.getDouble("duration-per-character", 2.0);
+        maxStayDuration = document.getInt("max-stay-duration", 0);
         appearDuration = document.getInt("appear-duration", 20);
         disappearDuration = document.getInt("disappear-duration", 10);
         viewRange = document.getFloat("view-range", 0.5f);
@@ -248,6 +262,7 @@ public class BubbleManagerImpl implements BubbleManager, ChatListener {
                             .scale(ConfigUtils.vector3(inner.getString("scale", "1,1,1")))
                             .hasShadow(inner.getBoolean("has-shadow", false))
                             .billboard(inner.getEnum("billboard", Billboard.class, Billboard.CENTER))
+                            .affectedByScaling(inner.getBoolean("affected-by-scale-attribute", true))
                             .build();
                     this.bubbleConfigs.put(bubble.id(), bubble);
                     this.bubbleConfigsByCommand.put(bubble.commandSuggestion(), bubble);
@@ -342,9 +357,10 @@ public class BubbleManagerImpl implements BubbleManager, ChatListener {
             advance = config.lineWidth();
         }
 
+        int textLength = AdventureHelper.stripTags(message).length();
         BubbleTag bubbleTag = new BubbleTag(player, renderer, channel, config,
                 AdventureHelper.miniMessageToMinecraftComponent(fullText),
-                bubble == null ? null : AdventureHelper.miniMessageToMinecraftComponent(AdventureHelper.surroundWithNameplatesFont(bubble.createImage(advance, 1,1))), this);
+                bubble == null ? null : AdventureHelper.miniMessageToMinecraftComponent(AdventureHelper.surroundWithNameplatesFont(bubble.createImage(advance, 1,1))), this, textLength);
         renderer.addTag(bubbleTag);
         if (delay != 0) {
             plugin.getScheduler().asyncLater(() -> bubbleTag.setCanShow(true), delay * 50L, TimeUnit.MILLISECONDS);
