@@ -25,6 +25,8 @@ dependencies {
 
     compileOnly("dev.folia:folia-api:${rootProject.properties["paper_version"]}-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:${rootProject.properties["placeholder_api_version"]}")
+    compileOnly("com.mojang:datafixerupper:10.0.21")
+    compileOnly("com.mojang:brigadier:1.3.10")
 
     // YAML
     compileOnly("dev.dejvokep:boosted-yaml:${rootProject.properties["boosted_yaml_version"]}")
@@ -38,7 +40,11 @@ dependencies {
     implementation("net.kyori:adventure-text-serializer-json-legacy-impl:${rootProject.properties["adventure_bundle_version"]}")
     implementation("net.kyori:adventure-text-serializer-legacy:${project.properties["adventure_bundle_version"]}")
 
-    implementation("net.momirealms:sparrow-reflection:0.33")
+    implementation("net.momirealms:sparrow-reflection:0.34")
+    implementation("net.momirealms:sparrow-nbt:0.22")
+    implementation("net.momirealms:sparrow-nbt-codec:0.22")
+    implementation("net.momirealms:sparrow-nbt-legacy-codec:0.22")
+    implementation("net.momirealms:sparrow-nbt-parser:0.22")
 
     // BStats
     compileOnly("org.bstats:bstats-bukkit:${rootProject.properties["bstats_version"]}")
@@ -48,7 +54,7 @@ dependencies {
     compileOnly("org.incendo:cloud-minecraft-extras:${rootProject.properties["cloud_minecraft_extras_version"]}")
     compileOnly("org.incendo:cloud-paper:${rootProject.properties["cloud_paper_version"]}")
     // Netty
-    compileOnly("io.netty:netty-all:4.1.117.Final")
+    compileOnly("io.netty:netty-all:${rootProject.properties["netty_version"]}")
 }
 
 tasks {
@@ -71,6 +77,7 @@ tasks {
         relocate("net.objecthunter.exp4j", "net.momirealms.customnameplates.libraries.exp4j")
         relocate("redis.clients.jedis", "net.momirealms.customnameplates.libraries.jedis")
         relocate("net.momirealms.sparrow.reflection", "net.momirealms.customnameplates.libraries.reflection")
+        relocate("net.momirealms.sparrow.nbt", "net.momirealms.customnameplates.libraries.nbt")
     }
 }
 

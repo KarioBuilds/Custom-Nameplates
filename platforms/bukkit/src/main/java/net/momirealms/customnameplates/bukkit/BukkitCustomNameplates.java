@@ -17,12 +17,6 @@
 
 package net.momirealms.customnameplates.bukkit;
 
-import com.google.gson.JsonNull;
-import com.google.gson.JsonPrimitive;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.nbt.api.BinaryTagHolder;
-import net.kyori.adventure.text.event.DataComponentValueConverterRegistry;
-import net.kyori.adventure.text.serializer.gson.GsonDataComponentValue;
 import net.momirealms.customnameplates.api.*;
 import net.momirealms.customnameplates.api.event.NameplatesReloadEvent;
 import net.momirealms.customnameplates.api.feature.ChatListener;
@@ -40,7 +34,6 @@ import net.momirealms.customnameplates.backend.feature.bubble.BubbleManagerImpl;
 import net.momirealms.customnameplates.backend.feature.image.ImageManagerImpl;
 import net.momirealms.customnameplates.backend.feature.nameplate.NameplateManagerImpl;
 import net.momirealms.customnameplates.backend.feature.pack.ResourcePackManagerImpl;
-import net.momirealms.customnameplates.backend.feature.tag.AbstractUnlimitedTagManager;
 import net.momirealms.customnameplates.backend.placeholder.PlaceholderManagerImpl;
 import net.momirealms.customnameplates.backend.storage.StorageManagerImpl;
 import net.momirealms.customnameplates.bukkit.command.BukkitCommandManager;
@@ -68,10 +61,6 @@ import net.momirealms.customnameplates.common.plugin.logging.PluginLogger;
 import net.momirealms.customnameplates.common.plugin.scheduler.AbstractJavaScheduler;
 import net.momirealms.customnameplates.common.plugin.scheduler.SchedulerAdapter;
 import net.momirealms.customnameplates.common.plugin.scheduler.SchedulerTask;
-import net.momirealms.sparrow.reflection.clazz.SparrowClass;
-import net.momirealms.sparrow.reflection.constructor.SConstructor2;
-import net.momirealms.sparrow.reflection.constructor.matcher.ConstructorMatcher;
-import net.momirealms.sparrow.reflection.field.matcher.FieldMatcher;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -87,7 +76,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -440,20 +428,31 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
         if (cnPlayer == null) {
             return;
         }
-        for (JoinQuitListener listener : joinQuitListeners) {
-            listener.onPlayerQuit(cnPlayer);
-        }
-        entityIDFastLookup.remove(cnPlayer.entityID());
-        if (VersionHelper.isFolia()) {
-            foliaLocationTracker.remove(player.getName());
+        try {
+            for (JoinQuitListener listener : joinQuitListeners) {
+                listener.onPlayerQuit(cnPlayer);
+            }
+        } finally {
+            removePlayerFromTrackers(cnPlayer);
+            entityIDFastLookup.remove(cnPlayer.entityID());
+            if (VersionHelper.isFolia()) {
+                foliaLocationTracker.remove(player.getName());
+            }
         }
     }
 
     public void handleQuit(CNPlayer cnPlayer) {
         entityIDFastLookup.remove(cnPlayer.entityID());
         onlinePlayerMap.remove(cnPlayer.uuid());
+        removePlayerFromTrackers(cnPlayer);
         if (VersionHelper.isFolia()) {
             foliaLocationTracker.remove(cnPlayer.name());
+        }
+    }
+
+    private void removePlayerFromTrackers(CNPlayer player) {
+        for (CNPlayer onlinePlayer : getOnlinePlayers()) {
+            onlinePlayer.removePlayerFromTracker(player);
         }
     }
 
@@ -480,6 +479,9 @@ public class BukkitCustomNameplates extends CustomNameplates implements Listener
 
     @EventHandler(ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
+        if (!event.getFrom().getWorld().equals(event.getTo().getWorld())) {
+            return;
+        }
         CNPlayer cnPlayer = getPlayer(event.getPlayer().getUniqueId());
         if (cnPlayer != null) {
             for (PlayerListener listener : playerListeners) {

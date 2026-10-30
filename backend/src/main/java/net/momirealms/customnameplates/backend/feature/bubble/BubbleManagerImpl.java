@@ -29,6 +29,7 @@ import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 import dev.dejvokep.boostedyaml.utils.format.NodeRole;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.momirealms.customnameplates.api.CNPlayer;
 import net.momirealms.customnameplates.api.ConfigManager;
 import net.momirealms.customnameplates.api.CustomNameplates;
@@ -52,6 +53,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class BubbleManagerImpl implements BubbleManager, ChatListener {
+    private static final TagResolver IGNORE_HOVER = TagResolver.resolver(
+            "hover", (arguments, context) -> net.kyori.adventure.text.minimessage.tag.Tag.styling());
+
     private final CustomNameplates plugin;
     private final Map<String, Bubble> bubbles = new Object2ObjectOpenHashMap<>();
     private Requirement[] sendBubbleRequirements;
@@ -334,6 +338,8 @@ public class BubbleManagerImpl implements BubbleManager, ChatListener {
         }
 
         String fullText = config.textPrefix().fastCreate(player).render(player) + message.replace("\\", "\\\\") + config.textSuffix().fastCreate(player).render(player);
+        // Bubbles only display text; discard hover payloads before layout and component conversion.
+        fullText = AdventureHelper.miniMessage().serialize(AdventureHelper.miniMessage().deserialize(fullText, IGNORE_HOVER));
         int lines = plugin.getAdvanceManager().getLines(fullText, config.lineWidth());
         if (lines > config.maxLines()) return;
         if (lines <= 0) return;
